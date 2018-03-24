@@ -1,24 +1,21 @@
 const Koa = require('koa'),
       app = new Koa(),
-      Trie = require('./trie.js');
+      router = require('./src/router.js').create();
 
-var router = Trie.createTrie();
+// Routes
+console.log(router);
 
-router.add('/', async ctx => {
-  ctx.body = "Hello World";
-});
+// Handle file references
+router.add('/', "./src/static/index.html");
 
 router.add('/lol', async ctx => {
   ctx.body = "POL";
 });
 
-app.use(async ctx => {
-  let route = ctx.request.url;
+router.add('/dol', async ctx => {
+  ctx.body = "dol";
+});
 
-  let handler = router.get(route);
-
-  handler(ctx);
-})
-
-
+// Call the router
+app.use(router.handleRequests.bind(router));
 app.listen(8000);
