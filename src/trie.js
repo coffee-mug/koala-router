@@ -1,8 +1,9 @@
 // Factories functions
 function createNode() {
   let node = {
-    value: null,
-    next: new Array(256)
+    handler: null,
+    fragment: null,
+    next: new Array(256),
   }
   return Object.create(node);
 }
@@ -16,35 +17,57 @@ function createTrie(root, radix=256) {
   }
 
   var methods = {
-    traverse(node, key, index) {
+    traverse(node, key, index, fragment) {
       if (!node)
         return null;
 
-      if (index == key.length) {
-        return node.value
+      // Wildcard
+      if (node.next[42]) {
+        // get the fragment
+        var fragment = this.captureFragment(key, index);
+
+        // Must replace the key with *
+        console.log("Fragment", fragment);
+        key = key.replace(fragment, '*');
+        console.log("updated key", key);
       }
 
-      console.log("Key", key, "index", index);
+      console.log("Fragment to pass as an argument", fragment);
+
+      if (index == key.length) {
+        node.fragment = fragment;
+        return node
+      }
+
       var nextChar = key[index].charCodeAt();
-      return this.traverse(node.next[nextChar], key, index + 1)
+      return this.traverse(node.next[nextChar], key, index + 1, fragment)
     },
-    put(node, key, index, value) {
+    put(node, key, index, handler) {
       if (!node) {
         node = createNode()
       }
       if (index == key.length) {
-        node.value = value
+        node.handler = handler 
         return node
       }
       var nextChar = key[index].charCodeAt();
-      node.next[nextChar] = this.put(node.next[nextChar], key, index + 1, value)
+
+      node.next[nextChar] = this.put(node.next[nextChar], key, index + 1, handler)
       return node;
     },
-    add(key, value) {
-      return this.put(this.root, key, 0, value);
+    captureFragment(k, i) {
+      let concat = "";
+      while (k[i] !== "/") {
+        concat += k[i];
+        i++
+      }
+      return concat;
+    },
+    add(key, handler) {
+      return this.put(this.root, key, 0, handler);
     },
     get(key) {
-      return this.traverse(this.root, key, 0);
+      return this.traverse(this.root, key, 0, null);
     },
   }
 

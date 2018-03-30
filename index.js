@@ -2,6 +2,14 @@ const Koa = require('koa'),
       app = new Koa(),
       router = require('./src/router.js').create();
 
+// logger
+app.use(async (ctx, next) => {
+  const start = Date.now();
+  await next();
+  const ms = Date.now() - start;
+  console.log(`${ctx.method} ${ctx.url} - ${ms}`);
+});
+
 // Routes
 console.log(router);
 
@@ -14,6 +22,10 @@ router.add('/lol', async ctx => {
 
 router.add('/dol', async ctx => {
   ctx.body = "dol";
+});
+
+router.add('/test/*/', async (ctx, variablePart) => {
+  ctx.body = variablePart;
 });
 
 // Call the router

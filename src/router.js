@@ -3,23 +3,34 @@ const Trie = require('./trie.js'),
 
 const routerMethods = {
   handleRequests: async function handle(ctx) {
-    let route = ctx.request.url;
-    let handler = this.get(route);
+    let route = ctx.request.url.endsWith('/') 
+          ? ctx.request.url 
+          : ctx.request.url + "/";
+    let node = this.get(route);
 
-    if (!handler) {
+    // Mandatory trailing slash 
+
+    console.log(node);
+
+    if (!node) {
       // 404
       ctx.response.status = 404;
       return;
     }
 
-    if (typeof handler == "string") {
+    if (typeof node.handler == "string") {
       // File to render
       // https://stackoverflow.com/questions/24024566/display-a-static-html-file-with-koa-js
       ctx.type = "html";
-      ctx.body = fs.createReadStream(handler);
+      ctx.body = fs.createReadStream(node.handler);
       return;
     }
-    return handler(ctx);
+
+    if (node.fragment) {
+      // apply fragment
+      return node.handler(ctx, node.fragment);
+    }
+    return node.handler(ctx);
   }
 }
 // Route middleware for koa.js
